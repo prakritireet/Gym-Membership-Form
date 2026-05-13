@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prak Gym </title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="header">
+        <div class="header-section">
+            <div class="header-main">
+                <img src="Logo.png" class="logo">
+                <div class="title">GYM</div>
+            </div>
+        </div>
+    </div>
+
+    <section class="gym-section">
+        <div class="container">
+
+            <form id="gymForm">
+
+                <h2>Gym Membership Form</h2>
+                <h3>Profile Image</h3>
+                <div class="row" style="justify-content:center;">
+                    <input class="pro-img" type="file" id="imageInput" accept="image/*">
+                </div>
+                <h3>Personal Information</h3>
+
+                <div class="row">
+                    <input type="text" name="firstName" placeholder="First Name" required>
+                    <input type="text" name="lastName" placeholder="Last Name" required>
+                </div>
+
+                <div class="row">
+                    <input type="number" name="age" placeholder="Age" required>
+                    <input type="date" name="dob" required>
+                </div>
+                <h3>Contact Details</h3>
+
+                <div class="row">
+                    <input type="email" name="email" placeholder="Email" required>
+                    <input type="number" name="phone" placeholder="Phone Number" required>
+                </div>
+
+                <div class="row">
+                    <input type="text" name="address" placeholder="Address" required>
+                </div>
+                <h3>Blood Group</h3>
+
+                <div class="row">
+                    <input type="text" name="bloodGroup" placeholder="Blood Group" required>
+                </div>
+                <h3>Membership Option</h3>
+
+                <div class="row">
+                    <label><input type="radio" name="interest" value="Yes" required> Yes</label>
+                    <label><input type="radio" name="interest" value="No"> No</label>
+                </div>
+                <h3>Gym Timing</h3>
+
+                <div class="row">
+                    <select name="timing" required>
+                        <option value="">Select Timing</option>
+                        <option>Before 11 AM</option>
+                        <option>After 7 PM</option>
+                    </select>
+                </div>
+                <h3>Gym Rules & Guidelines</h3>
+
+                <div class="rules-box">
+                    <p>Welcome to Iconic Gym!</p>
+                    <ol>
+                        <li>Training before 11 AM and after 7 PM only.</li>
+                        <li>Beginners must train under guidance.</li>
+                        <li>Shoes not allowed on gym carpet.</li>
+                        <li>Keep gym clean and wipe machines.</li>
+                        <li>Always rerack weights after use.</li>
+                    </ol>
+                </div>
+                <div class="row">
+                    <label>
+                        <input type="checkbox" required>
+                        I agree to Terms & Gym Rules
+                    </label>
+                </div>
+
+                <input type="submit" value="Submit Form">
+
+            </form>
+
+        </div>
+    </section>
+    <section class="dash-section">
+        <div class="dash-main">
+            <div class="dashboard">
+
+                <div class="list">
+                    <h3>Members</h3>
+                    <div id="memberList"></div>
+                </div>
+
+                <div class="profile">
+                    <h3>Profile</h3>
+                    <div id="profileBox">Select a member</div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+
+    <script>
+        let form = document.getElementById("gymForm");
+        let memberList = document.getElementById("memberList");
+        let profileBox = document.getElementById("profileBox");
+        let imageInput = document.getElementById("imageInput");
+
+        let members = JSON.parse(localStorage.getItem("members")) || [];
+
+        renderList();
+
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            let data = new FormData(this);
+            let file = imageInput.files[0];
+
+            if (file) {
+                let reader = new FileReader();
+
+                reader.onload = function () {
+                    saveMember(createMember(data, reader.result));
+                };
+
+                reader.readAsDataURL(file);
+            } else {
+                saveMember(createMember(data, "https://via.placeholder.com/150"));
+            }
+        });
+
+        function createMember(data, imageURL) {
+            return {
+                firstName: data.get("firstName"),
+                lastName: data.get("lastName"),
+                email: data.get("email"),
+                age: data.get("age"),
+                dob: data.get("dob"),
+                phone: data.get("phone"),
+                address: data.get("address"),
+                bloodGroup: data.get("bloodGroup"),
+                interest: data.get("interest"),
+                timing: data.get("timing"),
+                image: imageURL
+            };
+        }
+
+        function saveMember(member) {
+            members.push(member);
+            localStorage.setItem("members", JSON.stringify(members));
+
+            renderList();
+            form.reset();
+        }
+
+        function renderList() {
+    memberList.innerHTML = "";
+
+    members.forEach((m, index) => {
+        let div = document.createElement("div");
+        div.className = "member-item";
+
+        div.innerHTML = `
+            <span class="name">${m.firstName} ${m.lastName}</span>
+            <button class="deleteBtn">Delete</button>
+        `;
+        div.addEventListener("click", () => {
+            showProfile(index);
+        });
+        div.querySelector(".deleteBtn").addEventListener("click", (e) => {
+            e.stopPropagation();
+
+            members.splice(index, 1);
+            localStorage.setItem("members", JSON.stringify(members));
+            renderList();
+
+            profileBox.innerHTML = "Select a member";
+        });
+
+        memberList.appendChild(div);
+    });
+}
+
+        function showProfile(index) {
+            let m = members[index];
+
+            profileBox.innerHTML = `
+        <div style="display:flex;justify-content:center;">
+            <img src="${m.image}" style="
+                width:140px;
+                height:140px;
+                border-radius:50%;
+                object-fit:cover;
+                border:3px solid #ffb742;
+            ">
+        </div>
+
+        <h2 style="text-align:center;margin-top:10px;">
+            ${m.firstName} ${m.lastName}
+        </h2>
+
+        <p style="padding:6px 0"><b>Email:</b> ${m.email}</p>
+        <p style="padding:6px 0"><b>Phone:</b> ${m.phone}</p>
+        <p style="padding:6px 0"><b>Age:</b> ${m.age}</p>
+        <p style="padding:6px 0"><b>DOB:</b> ${m.dob}</p>
+        <p style="padding:6px 0"><b>Address:</b> ${m.address}</p>
+        <p style="padding:6px 0"><b>Blood Group:</b> ${m.bloodGroup}</p>
+        <p style="padding:6px 0"><b>Timing:</b> ${m.timing}</p>
+        <p style="padding:6px 0"><b>Interested:</b> ${m.interest}</p>
+    `;
+        }
+    </script>
+
+</body>
+
+</html>
